@@ -22,6 +22,7 @@ public class FluffyFoxClient implements ClientModInitializer {
 		Manager.register(Freelook.INSTANCE);
 		Manager.register(AntiScroll.INSTANCE);
 		Manager.register(Travel.INSTANCE);
+		Manager.register(FindItem.INSTANCE);
 
 		Command.register();
 

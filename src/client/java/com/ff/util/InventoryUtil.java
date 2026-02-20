@@ -4,14 +4,76 @@ import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.slot.Slot;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.screen.ScreenHandler;
 
 import java.util.List;
-import java.util.concurrent.LinkedTransferQueue;
 
 import static com.ff.FluffyFoxClient.MC;
 
 public class InventoryUtil {
+    public enum Rarity {
+        UNIQUE,
+        RARE,
+        LEGENDARY,
+        FABLED,
+        MYTHIC,
+        SET,
+        CRAFTED,
+        MISC
+    }
+
+    public static Rarity getRarity(ItemStack stack) {
+        if (stack == null) return null;
+
+        Text name = stack.get(DataComponentTypes.CUSTOM_NAME);
+        assert name != null;
+        Style style = name.getStyle();
+        if (style.getColor() == null) return null;
+
+        String color = style.getColor().getHexCode();
+        return switch (color) {
+            case "#AA00AA" -> Rarity.MYTHIC;
+            case "#55FFFF" -> Rarity.LEGENDARY;
+            case "#FF55FF" -> Rarity.RARE;
+            case "#FFFF55" -> Rarity.UNIQUE;
+            case "#FFFFFF" -> Rarity.MISC;
+            case "#55FF55" -> Rarity.SET;
+            case "#FF5555" -> Rarity.FABLED;
+            default -> Rarity.CRAFTED;
+        };
+    }
+
+    public static String getSlotArea(Slot slot, ScreenHandler handler) {
+        assert MC.player != null;
+        if (slot.inventory == MC.player.getInventory()) {
+
+            int index = slot.getIndex();
+
+            if (index >= 36 && index <= 39) {
+                return "Armor";
+            }
+
+            if (index == 40) {
+                return "Offhand";
+            }
+
+            if (index >= 0 && index <= 8) {
+                return "Hotbar";
+            }
+
+            if (index >= 9 && index <= 35) {
+                return "Main Inventory";
+            }
+
+            return "Player Inventory";
+        }
+
+        return "Container (" + slot.inventory.getClass().getSimpleName() + ")";
+    }
+
     public static void switchToSlot(int slotIndex) {
         if (MC.player != null && (MC.currentScreen == null || MC.currentScreen instanceof ChatScreen)) {
             MC.player.getInventory().setSelectedSlot(slotIndex);
