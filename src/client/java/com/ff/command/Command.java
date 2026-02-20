@@ -19,7 +19,8 @@ public class Command {
         var root = literal("ff");
 
         for (Feature feature : Manager.FEATURES) {
-            root.then(feature.buildCommand());
+            root.then(feature.buildCommand(feature.getName()));
+            root.then(feature.buildCommand(feature.getAlias()));
         }
 
         dispatcher.register(root);

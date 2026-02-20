@@ -17,8 +17,8 @@ public class AntiScroll extends Feature {
     }
 
     @Override
-    public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand() {
-        LiteralArgumentBuilder<FabricClientCommandSource> mainNode = literal("nohotbarscroll")
+    public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot) {
+        return literal(commandRoot)
             .then(literal("toggle")
                 .executes(ctx -> {
                     toggle();
@@ -33,9 +33,5 @@ public class AntiScroll extends Feature {
                     return 1;
                 })
             );
-
-        var aliasNode = literal("nhs").redirect(mainNode.build());
-
-        return mainNode.then(aliasNode);
     }
 }

@@ -33,7 +33,6 @@ public class AntiAfk extends Feature {
     public void onTick() {
         if (MC.player == null) return;
         if (MC.world == null) return;
-        if (MC.currentScreen != null) return;
 
         long now = System.currentTimeMillis();
         long interval = (long) (delaySeconds * 1000);
@@ -47,8 +46,8 @@ public class AntiAfk extends Feature {
     }
 
     @Override
-    public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand() {
-        LiteralArgumentBuilder<FabricClientCommandSource> mainNode = literal("antiafk")
+    public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot) {
+        return literal(commandRoot)
             .then(literal("toggle")
                 .executes(ctx -> {
                     toggle();
@@ -75,7 +74,7 @@ public class AntiAfk extends Feature {
                         double seconds = DoubleArgumentType.getDouble(ctx, "seconds");
                         setDelay(seconds);
                         ctx.getSource().sendFeedback(
-                                Text.literal("AntiAFK delay set to " + seconds + "s")
+                            Text.literal("AntiAFK delay set to " + seconds + "s")
                         );
                         return 1;
                     })
@@ -88,7 +87,7 @@ public class AntiAfk extends Feature {
                         setDelay(seconds);
 
                         ctx.getSource().sendFeedback(
-                                Text.literal("AntiAFK delay set to " + seconds + "s")
+                            Text.literal("AntiAFK delay set to " + seconds + "s")
                         );
                         return 1;
                     })
@@ -120,9 +119,5 @@ public class AntiAfk extends Feature {
                     return 1;
                 })
             );
-
-        var aliasNode = literal("aa").redirect(mainNode.build());
-
-        return mainNode.then(aliasNode);
     }
 }

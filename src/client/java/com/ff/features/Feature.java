@@ -27,7 +27,7 @@ public abstract class Feature {
     protected void onEnable() {}
     protected void onDisable() {}
 
-    public abstract LiteralArgumentBuilder<FabricClientCommandSource> buildCommand();
+    public abstract LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot);
 
     public void onTick() {}
 }

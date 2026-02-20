@@ -61,8 +61,8 @@ public class Freelook extends Feature {
     }
 
     @Override
-    public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand() {
-        LiteralArgumentBuilder<FabricClientCommandSource> mainNode = literal("freelook")
+    public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot) {
+        return literal(commandRoot)
             .then(literal("toggle")
                 .executes(ctx -> {
                     toggle();
@@ -104,9 +104,5 @@ public class Freelook extends Feature {
                     })
                 )
             );
-
-        var aliasNode = literal("fl").redirect(mainNode.build());
-
-        return mainNode.then(aliasNode);
     }
 }
