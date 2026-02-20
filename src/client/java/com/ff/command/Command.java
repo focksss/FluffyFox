@@ -16,7 +16,7 @@ public class Command {
     }
 
     private static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        var root = literal("slm");
+        var root = literal("ff");
 
         for (Feature feature : Manager.FEATURES) {
             root.then(feature.buildCommand());
