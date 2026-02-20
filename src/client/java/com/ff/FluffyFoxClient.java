@@ -1,14 +1,12 @@
 package com.ff;
 
-import com.ff.features.*;
+import com.ff.feature.*;
+import com.ff.feature.features.*;
 import net.fabricmc.api.ClientModInitializer;
 import com.ff.command.Command;
 import net.minecraft.client.MinecraftClient;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-
-import java.io.FileReader;
-import java.security.Key;
 
 
 public class FluffyFoxClient implements ClientModInitializer {

@@ -1,4 +1,4 @@
-package com.ff.features;
+package com.ff.feature;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -7,6 +7,7 @@ public abstract class Feature {
     protected final String name;
     protected final String alias;
     protected boolean enabled;
+    protected State state;
 
     public Feature(String name, String alias) {
         this.name = name;
@@ -29,5 +30,15 @@ public abstract class Feature {
 
     public abstract LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot);
 
-    public void onTick() {}
+    public void onTick() {
+        state.onTick();
+    }
+
+    public void setState(State newState) {
+        if (state != null) {
+            state.onExit();
+        }
+        state = newState;
+        state.onEnter();
+    }
 }

@@ -1,6 +1,6 @@
 package com.ff;
 
-import com.ff.features.Freelook;
+import com.ff.feature.features.Freelook;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;

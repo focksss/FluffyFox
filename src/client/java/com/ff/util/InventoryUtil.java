@@ -8,24 +8,14 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.util.Rarity;
 
 import java.util.List;
 
 import static com.ff.FluffyFoxClient.MC;
 
 public class InventoryUtil {
-    public enum Rarity {
-        UNIQUE,
-        RARE,
-        LEGENDARY,
-        FABLED,
-        MYTHIC,
-        SET,
-        CRAFTED,
-        MISC
-    }
-
-    public static Rarity getRarity(ItemStack stack) {
+    public static Item.Rarity getRarity(ItemStack stack) {
         if (stack == null) return null;
 
         Text name = stack.get(DataComponentTypes.CUSTOM_NAME);
@@ -35,14 +25,14 @@ public class InventoryUtil {
 
         String color = style.getColor().getHexCode();
         return switch (color) {
-            case "#AA00AA" -> Rarity.MYTHIC;
-            case "#55FFFF" -> Rarity.LEGENDARY;
-            case "#FF55FF" -> Rarity.RARE;
-            case "#FFFF55" -> Rarity.UNIQUE;
-            case "#FFFFFF" -> Rarity.MISC;
-            case "#55FF55" -> Rarity.SET;
-            case "#FF5555" -> Rarity.FABLED;
-            default -> Rarity.CRAFTED;
+            case "#AA00AA" -> Item.Rarity.MYTHIC;
+            case "#55FFFF" -> Item.Rarity.LEGENDARY;
+            case "#FF55FF" -> Item.Rarity.RARE;
+            case "#FFFF55" -> Item.Rarity.UNIQUE;
+            case "#55FF55" -> Item.Rarity.SET;
+            case "#FF5555" -> Item.Rarity.FABLED;
+            case "#00AAAA" -> Item.Rarity.CRAFTED;
+            default -> Item.Rarity.NONE;
         };
     }
 

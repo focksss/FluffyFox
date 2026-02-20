@@ -1,7 +1,7 @@
 package com.ff.command;
 
-import com.ff.features.Feature;
-import com.ff.features.Manager;
+import com.ff.feature.Feature;
+import com.ff.feature.Manager;
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;

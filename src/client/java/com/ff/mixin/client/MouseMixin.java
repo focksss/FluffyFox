@@ -1,7 +1,7 @@
 package com.ff.mixin.client;
 
-import com.ff.features.AntiScroll;
-import com.ff.features.Freelook;
+import com.ff.feature.features.AntiScroll;
+import com.ff.feature.features.Freelook;
 import net.minecraft.client.Mouse;
 import net.minecraft.entity.player.PlayerInventory;
 import org.spongepowered.asm.mixin.Mixin;

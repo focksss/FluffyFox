@@ -1,6 +1,9 @@
-package com.ff.features;
+package com.ff.feature.features;
 
+import com.ff.feature.Feature;
+import com.ff.feature.State;
 import com.ff.util.InventoryUtil;
+import com.ff.util.Item;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
@@ -11,24 +14,61 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 
 import net.minecraft.command.CommandSource;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.LoreComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.Vec3d;
 
 public class FindItem extends Feature {
     public static final Feature INSTANCE = new FindItem();
 
     private static String targetName;
-    private static InventoryUtil.Rarity targetRarity = null;
+    private static Item.Rarity targetRarity = null;
+
+    private static Vec3d nearestEnderchest = null;
+
+    private static class StartState extends State {
+        public StartState() {
+            super(FindItem.INSTANCE);
+        }
+        @Override
+        public void onTick() {
+            if (checkInventory()) {
+                feature.setState(new CompletedState());
+            } else {
+                feature.setState(new SwitchSpeedItemState());
+            };
+        }
+    }
+    private static class SwitchSpeedItemState extends State {
+        public SwitchSpeedItemState() {
+            super(FindItem.INSTANCE);
+        }
+        @Override
+        public void onTick() {
+
+        }
+    }
+    private static class CompletedState extends State {
+        public CompletedState() {
+            super(FindItem.INSTANCE);
+        }
+    }
 
     public FindItem() {
         super("finditem", "fi");
     }
 
     @Override
-    public void onTick() {
+    public void onEnable() {
+        state = new StartState();
+    }
+
+    private static boolean checkInventory() {
         assert MC.player != null;
 
         ScreenHandler handler = MC.player.currentScreenHandler;
@@ -37,7 +77,7 @@ public class FindItem extends Feature {
             ItemStack stack = slot.getStack();
             if (stack.isEmpty()) continue;
 
-            InventoryUtil.Rarity stackRarity = InventoryUtil.getRarity(stack);
+            Item.Rarity stackRarity = InventoryUtil.getRarity(stack);
 
             if (stack.getName().getString().toLowerCase().contains(targetName) && (targetRarity == null || targetRarity == stackRarity)) {
                 String area = InventoryUtil.getSlotArea(slot, handler);
@@ -52,15 +92,29 @@ public class FindItem extends Feature {
                 ).formatted(Formatting.RED, Formatting.BOLD);
 
                 MC.execute(() ->
-                    MC.inGameHud.getChatHud().addMessage(message)
+                        MC.inGameHud.getChatHud().addMessage(message)
                 );
+
+                return true;
             }
         }
+        return false;
     }
 
     @Override
     public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot) {
         return literal(commandRoot)
+            .then(literal("test")
+                .executes(ctx -> {
+                    for (int i = 0; i < 9; i++) {
+                        ItemStack stack = MC.player.getInventory().getStack(i);
+                        if (stack != null) {
+                            ctx.getSource().sendFeedback(Text.literal(new Item(stack).toString()));
+                        }
+                    }
+                    return 1;
+                })
+            )
             .then(literal("toggle")
                 .executes(ctx -> {
                     toggle();
@@ -68,18 +122,6 @@ public class FindItem extends Feature {
                     return 1;
                 })
             )
-//            .then(literal("test")
-//                .executes(ctx -> {
-//                    for (int i = 0; i < 9; i++) {
-//                        ItemStack stack = MC.player.getInventory().getStack(i);
-//                        if (stack != null) {
-//                            ctx.getSource().sendFeedback(Text.literal(stack.getName().getStyle().getColor().getName()));
-//                            ctx.getSource().sendFeedback(Text.literal(InventoryUtil.getRarity(stack).toString()));
-//                        }
-//                    }
-//                    return 1;
-//                })
-//            )
             .then(literal("named")
                 .then(argument("name_filter", StringArgumentType.string())
                     .executes(ctx -> {
@@ -95,7 +137,7 @@ public class FindItem extends Feature {
                         CommandSource.suggestMatching(
                             new String[]{
                                 "mythic", "legendary", "rare", "unique",
-                                "fabled", "crafted", "set", "misc", "any"
+                                "fabled", "crafted", "set", "normal", "none"
                             },
                             builder
                         )
@@ -108,7 +150,7 @@ public class FindItem extends Feature {
                             return 1;
                         }
                         try {
-                            targetRarity = InventoryUtil.Rarity.valueOf(rarityInput);
+                            targetRarity = Item.Rarity.valueOf(rarityInput);
                             ctx.getSource().sendFeedback(
                                 Text.literal("Target item rarity set to: " + rarityInput)
                             );

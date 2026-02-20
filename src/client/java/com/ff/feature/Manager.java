@@ -1,4 +1,4 @@
-package com.ff.features;
+package com.ff.feature;
 
 import java.util.ArrayList;
 import java.util.List;

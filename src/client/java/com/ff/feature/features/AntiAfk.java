@@ -1,5 +1,6 @@
-package com.ff.features;
+package com.ff.feature.features;
 
+import com.ff.feature.Feature;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;

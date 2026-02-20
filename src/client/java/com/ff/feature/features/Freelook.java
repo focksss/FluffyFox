@@ -1,10 +1,10 @@
-package com.ff.features;
+package com.ff.feature.features;
 
+import com.ff.feature.Feature;
 import com.ff.util.MovementUtil;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;

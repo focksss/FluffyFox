@@ -1,12 +1,10 @@
-package com.ff.features;
+package com.ff.feature.features;
 
-import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.ff.feature.Feature;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 public class AntiScroll extends Feature {
