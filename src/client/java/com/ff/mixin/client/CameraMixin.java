@@ -23,13 +23,16 @@ public abstract class CameraMixin {
     @Inject(method = "update", at = @At("TAIL"))
     private void onUpdate(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
         if (Freelook.INSTANCE.isEnabled()) {
-            PlayerEntity player = MC.player;
-            if (player == null) return;
             setRotation(Freelook.yaw, Freelook.pitch);
+
+            Vec3d pos = focusedEntity.getLerpedPos(tickProgress);
+
+            double yawRad = Math.toRadians(Freelook.yaw);
+            double pitchRad = -Math.toRadians(Freelook.pitch);
             setPos(
-                player.getX() + (Freelook.distance * Math.cos(Freelook.yaw) * Math.cos(Freelook.pitch)),
-                player.getY() + (Freelook.distance * Math.sin(Freelook.pitch)),
-                player.getZ() + (Freelook.distance * Math.sin(Freelook.yaw) * Math.cos(Freelook.pitch))
+                pos.x + (Freelook.distance * Math.cos(pitchRad) * Math.sin(yawRad)),
+                pos.y + focusedEntity.getStandingEyeHeight() - (Freelook.distance * Math.sin(pitchRad)),
+                pos.z - (Freelook.distance * Math.cos(pitchRad) * Math.cos(yawRad))
             );
         }
     }
