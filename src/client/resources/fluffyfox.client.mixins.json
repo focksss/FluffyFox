@@ -3,7 +3,9 @@
 	"package": "com.ff.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"ExampleClientMixin"
+		"ExampleClientMixin",
+		"CameraMixin",
+		"MouseMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
