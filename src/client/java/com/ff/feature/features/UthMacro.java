@@ -18,10 +18,12 @@ import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -42,6 +44,14 @@ public class UthMacro extends Feature {
         MAIN,
         ALT1,
         ALT2,
+        ALT3,
+        ALT4,
+        ALT5,
+        ALT6,
+        ALT7,
+        ALT8,
+        ALT9,
+        ALT10,
     }
 
     private static Role role = Role.MAIN;
@@ -66,9 +76,10 @@ public class UthMacro extends Feature {
             List<DisplayEntity.TextDisplayEntity> uthMobs = world.getEntitiesByClass(
                 DisplayEntity.TextDisplayEntity.class,
                 box,
-                entity -> getMobName(entity).contains(" Uth")
+                entity -> getMobName(entity).contains("Uth")
             );
             if (!uthMobs.isEmpty()) {
+                MC.inGameHud.getChatHud().addMessage(Text.literal("Uth mob detected, switching to attack state"));
                 feature.setState(new AttackState(uthMobs.getFirst()));
             }
         }
@@ -76,7 +87,7 @@ public class UthMacro extends Feature {
 
     /// Look at uth mob and execute bash (rlr) and then scream (rrl), then switch state to collect.
     private class AttackState extends State {
-        private final DisplayEntity.TextDisplayEntity uthMob;
+        private DisplayEntity.TextDisplayEntity uthMob;
 
         private double lastActionTime = System.currentTimeMillis();
         private int actionIndex = 0;
@@ -89,8 +100,28 @@ public class UthMacro extends Feature {
         @Override
         public void onTick() {
             PlayerEntity player = MC.player;
+            World world = MC.world;
             ClientPlayerInteractionManager interactionManager = MC.interactionManager;
-            if (player == null || interactionManager == null) return;
+            if (player == null || interactionManager == null || world == null) return;
+
+            if (uthMob == null) {
+                MC.inGameHud.getChatHud().addMessage(Text.literal("No Uth mob detected while in attack state"));
+                Vec3d center = player.getEyePos();
+                double radius = 30.0;
+                Box box = new Box(
+                        center.getX() - radius, center.getY() - radius, center.getZ() - radius,
+                        center.getX() + radius, center.getY() + radius, center.getZ() + radius
+                );
+
+                List<DisplayEntity.TextDisplayEntity> uthMobs = world.getEntitiesByClass(
+                    DisplayEntity.TextDisplayEntity.class,
+                    box,
+                    entity -> getMobName(entity).contains(" Uth")
+                );
+
+                uthMob = uthMobs.getFirst();
+            }
+
             Vec3d targetPosition = uthMob.getEyePos().subtract(0.0, 1.0, 0.0);
             MovementUtil.lookAtCoordinate(targetPosition, 0.15);
             MovementUtil.updateCamera(
@@ -115,7 +146,10 @@ public class UthMacro extends Feature {
                     case 4 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
                     case 5 -> player.swingHand(Hand.MAIN_HAND);
                     // next state
-                    case 6 -> feature.setState(new CollectState());
+                    case 6 -> {
+                        feature.setState(new CollectState());
+                        MC.inGameHud.getChatHud().addMessage(Text.literal("Switching to collect state"));
+                    }
                 }
                 lastActionTime = System.currentTimeMillis();
                 actionIndex++;
@@ -133,6 +167,9 @@ public class UthMacro extends Feature {
         private boolean returnToOrigin = false;
         private boolean atTarget = false;
         private Vec3d lastTarget = null;
+
+        private double stopThreshold = 0.5;
+        private double goThreshold = 3.0;
 
         public CollectState() { super(UthMacro.INSTANCE); }
 
@@ -157,22 +194,30 @@ public class UthMacro extends Feature {
 
                     Text name = stack.get(DataComponentTypes.CUSTOM_NAME);
                     return (name != null && name.getString().contains("Uth Rune"));
+//                    return stack.isOf(Items.EMERALD);
                 }
             );
 
             if (!uthRunes.isEmpty()) hasSeenRune = true;
 
             if (hasSeenRune) {
-                if (returnToOrigin && atTarget) {
-                    feature.setState(new ReloadState());
-                }
-
                 Vec3d targetPosition = switch (role) {
                     case Role.ALT1 -> new Vec3d(-216.5, 137.5, -4459.5);
                     case Role.ALT2 -> new Vec3d(-214.5, 137.5, -4459.5);
+                    case Role.ALT3 -> new Vec3d(-215.5, 137.5, -4458.5);
+                    case Role.ALT4 -> new Vec3d(-215.5, 137.5, -4460.5);
+                    case Role.ALT5 -> new Vec3d(-218.5, 137.5, -4459.5);
+                    case Role.ALT6 -> new Vec3d(-212.5, 137.5, -4459.5);
+                    case Role.ALT7 -> new Vec3d(-219.5, 137.5, -4459.5);
+                    case Role.ALT8 -> new Vec3d(-211.5, 137.5, -4459.5);
+                    case Role.ALT9 -> new Vec3d(-220.5, 137.5, -4459.5);
+                    case Role.ALT10 -> new Vec3d(-210.5, 137.5, -4459.5);
                     case Role.MAIN -> playerPosition;
                 };
                 boolean targetIsItem = false;
+                if (returnToOrigin && playerPosition.distanceTo(targetPosition) < goThreshold && atTarget && uthRunes.isEmpty()) {
+                    feature.setState(new ReloadState());
+                }
 
                 // get only the runes that are older than 4 seconds to allow time for vindicator buff to auto-collect
                 List<ItemEntity> remainingRunes = uthRunes.stream().filter(entity -> entity.getItemAge() > 80).toList();
@@ -192,7 +237,7 @@ public class UthMacro extends Feature {
 
                 Vec3d testVelocity = MC.player.getVelocity().getHorizontal();
                 Vec3d coastPosition = playerPosition;
-                for (int i = 0; i < 80; i++) {
+                for (int i = 0; i < 100; i++) {
                     coastPosition = coastPosition.add(testVelocity);
                     testVelocity = testVelocity.multiply(friction);
                 }
@@ -202,8 +247,6 @@ public class UthMacro extends Feature {
                 double currentDist = targetIsItem ? delta.length() : delta.getHorizontal().length();
                 double coastDist = targetIsItem ? coastDelta.length() : coastDelta.getHorizontal().length();
 
-                double stopThreshold = 0.5;
-                double goThreshold = 3.0;
                 if (lastTarget == null || lastTarget.distanceTo(targetPosition) > 0.5 || currentDist > goThreshold) {
                     lastTarget = targetPosition;
                     atTarget = false;
@@ -264,13 +307,17 @@ public class UthMacro extends Feature {
         public void onTick() {
             PlayerEntity player = MC.player;
             ClientPlayNetworkHandler networkHandler = MC.getNetworkHandler();
-            if (player == null || networkHandler == null) return;
+            ClientPlayerInteractionManager interactionManager = MC.interactionManager;
+            if (player == null || networkHandler == null || interactionManager == null) return;
 
             if (!hasClassed) {
                 networkHandler.sendChatCommand("class");
                 hasClassed = true;
-            } else if (System.currentTimeMillis() - startTime > 4000) {
-                player.swingHand(Hand.MAIN_HAND);
+            } else if (System.currentTimeMillis() - startTime > 8000) {
+                if (MC.crosshairTarget instanceof EntityHitResult hit) {
+                    interactionManager.attackEntity(player, hit.getEntity());
+                    player.swingHand(Hand.MAIN_HAND);
+                }
                 feature.setState(new IdleState());
             }
         }
@@ -330,14 +377,36 @@ public class UthMacro extends Feature {
 //                            entity -> entity instanceof PlayerEntity || entity instanceof ZombieEntity || entity instanceof ArmorStandEntity
                         );
 
-                        MC.player.swingHand(Hand.MAIN_HAND);
+                        if (MC.crosshairTarget instanceof EntityHitResult hit) {
+                            MC.interactionManager.attackEntity(MC.player, hit.getEntity());
+                            MC.player.swingHand(Hand.MAIN_HAND);
+                        }
 
                         for (Entity entity : entities) {
                             if (entity instanceof DisplayEntity.TextDisplayEntity textDisplay) {
                                 String name = getMobName(textDisplay);
                                 System.out.println("found mob named: " + name + " --- at: " + entity.getEyePos() + "\n\n");
+                                ctx.getSource().sendFeedback(
+                                    Text.literal("found: " + name)
+                                );
                             }
                         }
+
+                        List<ItemEntity> uthRunes = MC.world.getEntitiesByClass(
+                                ItemEntity.class,
+                                box,
+                                entity -> true
+                        );
+                        for (ItemEntity itemEntity : uthRunes) {
+                            ItemStack stack = itemEntity.getStack();
+
+                            Text name = stack.get(DataComponentTypes.CUSTOM_NAME);
+                            ctx.getSource().sendFeedback(Text.literal("ITEM: " + name + ",\n "
+                                    + stack.get(DataComponentTypes.LORE) + ", \n"
+                                    + stack.get(DataComponentTypes.ITEM_MODEL) + ", \n"
+                            ));
+                        }
+
                         return 1;
                     })
             )
@@ -379,6 +448,38 @@ public class UthMacro extends Feature {
                     .executes(ctx -> {
                         spellClickDelayMS = DoubleArgumentType.getDouble(ctx, "delay_ms");
                         ctx.getSource().sendFeedback(Text.literal("Spell Click Delay set to: " + spellClickDelayMS + "ms"));
+                        return 1;
+                    })
+                )
+            )
+            .then(literal("override_state")
+                .then(argument("state", StringArgumentType.word())
+                    .suggests((context, builder) ->
+                        CommandSource.suggestMatching(
+                            new String[]{
+                                    "idle", "attack", "collect", "reload"
+                            },
+                            builder
+                        )
+                    )
+                    .executes(ctx -> {
+                        String stateInput = StringArgumentType.getString(ctx, "state").toUpperCase();
+
+                        try {
+                            switch (stateInput) {
+                                case "IDLE" -> state = new IdleState();
+                                case "ATTACK" -> state = new AttackState(null);
+                                case "COLLECT" -> state = new CollectState();
+                                case "RELOAD" -> state = new ReloadState();
+                            }
+                            ctx.getSource().sendFeedback(
+                                Text.literal("State set to: " + stateInput)
+                            );
+                        } catch (IllegalArgumentException e) {
+                            ctx.getSource().sendError(
+                                Text.literal("Invalid state.")
+                            );
+                        }
                         return 1;
                     })
                 )

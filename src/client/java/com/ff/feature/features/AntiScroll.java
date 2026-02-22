@@ -16,20 +16,19 @@ public class AntiScroll extends Feature {
 
     @Override
     public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot) {
-        return literal(commandRoot)
-            .then(literal("toggle")
-                .executes(ctx -> {
-                    toggle();
-                    ctx.getSource().sendFeedback(Text.literal("NoHotbarScroll: " + (enabled ? "ON" : "OFF")));
-                    return 1;
-                })
-            )
-            .then(literal("t")
-                .executes(ctx -> {
-                    toggle();
-                    ctx.getSource().sendFeedback(Text.literal("NoHotbarScroll: " + (enabled ? "ON" : "OFF")));
-                    return 1;
-                })
-            );
+        return literal(commandRoot).then(literal("toggle")
+            .executes(ctx -> {
+                toggle();
+                ctx.getSource().sendFeedback(Text.literal("NoHotbarScroll: " + (enabled ? "ON" : "OFF")));
+                return 1;
+            })
+        )
+        .then(literal("t")
+            .executes(ctx -> {
+                toggle();
+                ctx.getSource().sendFeedback(Text.literal("NoHotbarScroll: " + (enabled ? "ON" : "OFF")));
+                return 1;
+            })
+        );
     }
 }
