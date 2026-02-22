@@ -31,7 +31,7 @@ public class Travel extends Feature {
         MovementUtil.lookAtCoordinate(target, 0.25);
         MovementUtil.forceForward = MovementUtil.MovementState.POSITIVE;
         MovementUtil.updatePlayerMovement();
-        MovementUtil.updateCamera(-90, 90);
+        MovementUtil.updateCamera(-90, 90, 15.0, 10.0, 0.0, 0.0, 90.0);
     }
 
     @Override

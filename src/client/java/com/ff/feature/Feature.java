@@ -7,7 +7,7 @@ public abstract class Feature {
     protected final String name;
     protected final String alias;
     protected boolean enabled;
-    protected State state;
+    protected State state = new State(this) { };
 
     public Feature(String name, String alias) {
         this.name = name;

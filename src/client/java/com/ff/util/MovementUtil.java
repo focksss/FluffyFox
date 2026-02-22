@@ -80,23 +80,76 @@ public class MovementUtil {
         active = true;
     }
 
-    public static void updateCamera(double pitchMin, double pitchMax) {
+    /**
+     * Interpolates the camera towards the target rotation given parameters.
+     *
+     * @param pitchMin pitch clamp min when rotating camera
+     * @param pitchMax pitch clamp max when rotating camera
+     * @param pitchOffset pitch offset when rotating camera
+     * @param pitchTolerance tolerance for pitch before inducing a rotation
+     * @param yawTolerance tolerance for yaw before inducing a rotation
+     * @param absoluteYawTolerance tolerance for yaw before returning a value of 0, indicating that remaining yaw delta is negligible
+     * @param snapThreshold tolerance for a delta in pitch or yaw before simulating a large mouse swipe to get near it
+     * @return the remaining yaw delta (for strafe correction). Returns 0 if within absoluteYawTolerance
+     */
+    public static double updateCamera(
+            double pitchMin,
+            double pitchMax,
+            double pitchOffset,
+            double pitchTolerance,
+            double yawTolerance,
+            double absoluteYawTolerance,
+            double snapThreshold
+    ) {
         PlayerEntity player = MC.player;
-        if (player == null) return;
-        if (!active) return;
+        if (player == null) return 0;
+        if (!active) return 0;
 
         long elapsed = System.currentTimeMillis() - startTime;
-        float t = Math.min(1.0f, (float) elapsed / duration);
+        float totalDelta = (float) Math.sqrt(
+            Math.pow(wrapDegrees(targetYaw - startYaw), 2) + Math.pow(targetPitch - startPitch, 2)
+        );
+        float effectiveDuration = duration;
+        if (totalDelta > snapThreshold) {
+            effectiveDuration = (float) (duration * (snapThreshold / totalDelta));
+        }
+        float t = Math.min(1.0f, (float) elapsed / effectiveDuration);
 
-        currentYaw = lerpAngle(startYaw, targetYaw, t);
-        currentPitch = (float) clamp(lerp(startPitch, targetPitch, t), pitchMin, pitchMax);
+        // yaw
+        float interpolatedYaw = lerpAngle(startYaw, targetYaw, t);
 
+        float yawDelta = wrapDegrees(interpolatedYaw - currentYaw);
+
+        if (Math.abs(yawDelta) <= absoluteYawTolerance) {
+            if (t >= 1.0f) active = false;
+            return 0;
+        }
+
+        if (Math.abs(yawDelta) > yawTolerance) {
+            currentYaw = interpolatedYaw;
+        }
+
+        // pitch
+        float thisTargetPitch = (float) (targetPitch + pitchOffset);
+        float pitchDelta = thisTargetPitch - currentPitch;
+
+        if (Math.abs(pitchDelta) > pitchTolerance) {
+            currentPitch = (float) clamp(
+                lerp(startPitch, thisTargetPitch, t),
+                pitchMin,
+                pitchMax
+            );
+        }
+
+        // submit
         player.setYaw(currentYaw);
         player.setPitch(currentPitch);
 
         if (t >= 1.0f) {
             active = false;
         }
+
+        return yawDelta;
     }
 
     public static void updatePlayerMovement() {

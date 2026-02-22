@@ -13,6 +13,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,8 +73,9 @@ public class BlockUtil {
         return blocks;
     }
 
+    @Nullable
     public static BlockPos findNearestBlock(
-            Predicate<BlockState> filter,
+            Block type,
             double radius,
             boolean raycastTest
     ) {
@@ -108,7 +110,7 @@ public class BlockUtil {
 
                     BlockState state = world.getBlockState(mutable);
                     if (state.isAir()) continue;
-                    if (!filter.test(state)) continue;
+                    if (state.getBlock() != type) continue;
 
                     if (raycastTest) {
                         BlockHitResult hit = world.raycast(new RaycastContext(
