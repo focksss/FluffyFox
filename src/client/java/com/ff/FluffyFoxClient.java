@@ -2,6 +2,7 @@ package com.ff;
 
 import com.ff.feature.*;
 import com.ff.feature.features.*;
+import com.ff.ipc.IpcManager;
 import net.fabricmc.api.ClientModInitializer;
 import com.ff.command.Command;
 import net.minecraft.client.MinecraftClient;
@@ -14,6 +15,8 @@ public class FluffyFoxClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		IpcManager.init();
+
 		Keybinds.register();
 
 		Manager.register(AntiAfk.INSTANCE);

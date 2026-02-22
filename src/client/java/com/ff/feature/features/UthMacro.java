@@ -2,6 +2,7 @@ package com.ff.feature.features;
 
 import com.ff.feature.Feature;
 import com.ff.feature.State;
+import com.ff.ipc.IpcManager;
 import com.ff.util.MovementUtil;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -30,6 +31,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.ff.FluffyFoxClient.MC;
@@ -56,6 +59,10 @@ public class UthMacro extends Feature {
 
     private static Role role = Role.MAIN;
     private static double spellClickDelayMS = 89;
+
+    public void resetState() {
+        INSTANCE.setState(new ReloadState());
+    }
 
     /// Do nothing, unless there's an uth mob, in which case switch state to attack,
     private class IdleState extends State {
@@ -168,9 +175,6 @@ public class UthMacro extends Feature {
         private boolean atTarget = false;
         private Vec3d lastTarget = null;
 
-        private double stopThreshold = 0.5;
-        private double goThreshold = 3.0;
-
         public CollectState() { super(UthMacro.INSTANCE); }
 
         @Override
@@ -215,8 +219,9 @@ public class UthMacro extends Feature {
                     case Role.MAIN -> playerPosition;
                 };
                 boolean targetIsItem = false;
+                double goThreshold = 3.0;
                 if (returnToOrigin && playerPosition.distanceTo(targetPosition) < goThreshold && atTarget && uthRunes.isEmpty()) {
-                    feature.setState(new ReloadState());
+                    IpcManager.signalCollectComplete();
                 }
 
                 // get only the runes that are older than 4 seconds to allow time for vindicator buff to auto-collect
@@ -251,6 +256,7 @@ public class UthMacro extends Feature {
                     lastTarget = targetPosition;
                     atTarget = false;
                 }
+                double stopThreshold = 0.5;
                 if (currentDist < stopThreshold) atTarget = true;
 
                 System.out.println("dist: " + currentDist);
@@ -364,6 +370,9 @@ public class UthMacro extends Feature {
             .then(literal("test")
                     .executes(ctx -> {
                         Vec3d center = MC.player.getEyePos();
+
+                        IpcManager.signalCollectComplete();
+
                         double radius = 5.0;
                         Box box = new Box(
                             center.getX() - radius, center.getY() - radius, center.getZ() - radius,
