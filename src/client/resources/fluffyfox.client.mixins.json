@@ -6,7 +6,7 @@
 		"ExampleClientMixin",
 		"CameraMixin",
 		"MouseMixin",
-		"ArmorStandRenderMixin"
+		"EntityRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
