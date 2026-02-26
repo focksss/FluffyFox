@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Mouse.class)
-public class MouseMixin {
+public abstract class MouseMixin {
     @Shadow private double cursorDeltaX;
     @Shadow private double cursorDeltaY;
 

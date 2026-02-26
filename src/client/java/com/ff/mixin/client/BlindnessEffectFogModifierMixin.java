@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlindnessEffectFogModifier.class)
-public class BlindnessEffectFogModifierMixin {
+public abstract class BlindnessEffectFogModifierMixin {
 
     @Inject(method = "applyStartEndModifier", at = @At("TAIL"))
     private void noBlindnessFog(FogData data, Camera camera, ClientWorld clientWorld, float f, RenderTickCounter renderTickCounter, CallbackInfo ci) {
