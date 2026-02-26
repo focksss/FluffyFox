@@ -31,42 +31,6 @@ public class IcelessSnakes extends Feature {
     public IcelessSnakes() { super("icelesssnakes", "is"); }
 
     @Override
-    public void onTick() {
-        PlayerEntity player = MC.player;
-        World world = MC.world;
-        if (player == null || world == null) return;
-
-        Vec3d center = MC.player.getEyePos();
-
-        double radius = 50.0;
-        Box box = new Box(
-            center.getX() - radius, center.getY() - radius, center.getZ() - radius,
-            center.getX() + radius, center.getY() + radius, center.getZ() + radius
-        );
-
-        List<ArmorStandEntity> entities = MC.world.getEntitiesByClass(
-            ArmorStandEntity.class,
-            box,
-            entity -> {
-                ItemStack item = entity.getEquippedStack(EquipmentSlot.HEAD);
-                return item.getItem() ==Items.DIAMOND_SWORD && item.getDamage() == 4;
-            }
-        );
-
-        for (ArmorStandEntity entity : entities) {
-            System.out.println("!!!!!");
-            System.out.println("!!!!!");
-            System.out.println("!!!!!");
-            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getName());
-            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_MODEL_DATA));
-            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.ITEM_MODEL));
-            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_NAME));
-            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.LORE));
-            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_DATA));
-        }
-    }
-
-    @Override
     public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot) {
         return literal(commandRoot)
             .then(literal("toggle")

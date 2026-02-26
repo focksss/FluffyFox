@@ -6,7 +6,8 @@
 		"ExampleClientMixin",
 		"CameraMixin",
 		"MouseMixin",
-		"EntityRendererMixin"
+		"EntityRendererMixin",
+		"BlindnessEffectFogModifierMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
