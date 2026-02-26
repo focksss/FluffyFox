@@ -5,7 +5,8 @@
 	"client": [
 		"ExampleClientMixin",
 		"CameraMixin",
-		"MouseMixin"
+		"MouseMixin",
+		"ArmorStandRenderMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -3,24 +3,29 @@ package com.ff.feature.features;
 import com.ff.feature.Feature;
 import com.ff.feature.State;
 import com.ff.ipc.IpcManager;
+import com.ff.util.InventoryUtil;
 import com.ff.util.MovementUtil;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.command.CommandSource;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.CustomModelDataComponent;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.mob.EvokerFangsEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.text.MutableText;
+import net.minecraft.item.MinecartItem;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -31,37 +36,255 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.ff.FluffyFoxClient.MC;
-import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 
 public class UthMacro extends Feature {
+    private static final Vec3d center = new Vec3d(-215.5, 137.75, -4459.5);
+    private static final double squareRadius = 24;
+
+    private static final Vec3d[] altPositions = new Vec3d[] {
+        new Vec3d(-216.5, 137.5, -4459.5),
+        new Vec3d(-214.5, 137.5, -4459.5),
+        new Vec3d(-215.5, 137.5, -4458.5),
+        new Vec3d(-215.5, 137.5, -4460.5),
+        new Vec3d(-218.5, 137.5, -4459.5),
+        new Vec3d(-212.5, 137.5, -4459.5),
+        new Vec3d(-219.5, 137.5, -4459.5),
+        new Vec3d(-211.5, 137.5, -4459.5),
+        new Vec3d(-220.5, 137.5, -4459.5),
+        new Vec3d(-210.5, 137.5, -4459.5),
+    };
+
     public static UthMacro INSTANCE = new UthMacro();
 
-    private enum Role {
-        MAIN,
-        ALT1,
-        ALT2,
-        ALT3,
-        ALT4,
-        ALT5,
-        ALT6,
-        ALT7,
-        ALT8,
-        ALT9,
-        ALT10,
-    }
+    /// 0 = Main, 1+ is an alt
+    private static int role = -1;
 
-    private static Role role = Role.MAIN;
     private static double spellClickDelayMS = 89;
 
     public void resetState() {
-        INSTANCE.setState(new ReloadState());
+        INSTANCE.setState(new ClassState());
+    }
+
+    /// (MAIN ONLY) Jump off of cliff, place feather, switch to idle state.
+    private class StartState extends State {
+        private boolean hasEscaped = false;
+        private boolean hasBordered = false;
+        private double lastActionTime = System.currentTimeMillis();
+        private Vec3d borderTarget = null;
+        private int actionIndex = 0;
+
+        public StartState() { super(UthMacro.INSTANCE); }
+
+        @Override
+        public void onTick() {
+            if (role != 0) {
+                MC.inGameHud.getChatHud().addMessage(Text.literal(
+                    "UthMacro State ticked as StartState, but this instance is running as an alt!"
+                ));
+                return;
+            }
+
+            PlayerEntity player = MC.player;
+            World world = MC.world;
+            ClientPlayerInteractionManager interactionManager = MC.interactionManager;
+            if (player == null || world == null || interactionManager == null) return;
+
+            Vec3d playerPosition = player.getEyePos();
+            Vec3d footPos = new Vec3d(playerPosition.x, player.getY() + 0.6, playerPosition.z);
+
+            if (borderTarget == null) {
+                Vec3d closestPoint = closestPointOnBorder(playerPosition);
+                Vec3d delta = closestPoint.subtract(playerPosition);
+                borderTarget = closestPoint.add(delta.normalize().multiply(3.0));
+            }
+
+            MC.options.forwardKey.setPressed(false);
+            MC.options.rightKey.setPressed(false);
+            MC.options.leftKey.setPressed(false);
+            if (!hasBordered) {
+                double dist = borderTarget.subtract(playerPosition).getHorizontal().length();
+
+                double stopThreshold = 2.0;
+                if (dist < stopThreshold) {
+                    MC.inGameHud.getChatHud().addMessage(Text.literal("Bordered"));
+                    hasBordered = true;
+                }
+
+                MovementUtil.lookAtCoordinate(
+                        borderTarget,
+                        0.2
+                );
+                double yawOffset = MovementUtil.updateCamera(
+                        10.0,
+                        42.8, 0.0,
+                        10.0 * (1.0 + (1.0 / (-dist - 2))),
+                        15.0,
+                        5.0,
+                        90.0
+                );
+
+                if (!hasBordered) {
+                    MC.options.forwardKey.setPressed(dist > stopThreshold);
+
+                    Vec3d dir = player.getRotationVector().getHorizontal().normalize();
+                    BlockHitResult hit = world.raycast(new RaycastContext(
+                            footPos,
+                            footPos.add(dir.multiply(2.0)),
+                            RaycastContext.ShapeType.COLLIDER,
+                            RaycastContext.FluidHandling.NONE,
+                            player
+                    ));
+                    BlockHitResult hitRight = MC.world.raycast(new RaycastContext(
+                            playerPosition.subtract(dir),
+                            playerPosition.add(dir.rotateY((float) (Math.PI / 4.0)).multiply(5.0)),
+                            RaycastContext.ShapeType.COLLIDER,
+                            RaycastContext.FluidHandling.NONE,
+                            MC.player
+                    ));
+                    BlockHitResult hitLeft = MC.world.raycast(new RaycastContext(
+                            playerPosition,
+                            playerPosition.add(dir.rotateY((float) (-Math.PI / 4.0)).multiply(5.0)),
+                            RaycastContext.ShapeType.COLLIDER,
+                            RaycastContext.FluidHandling.NONE,
+                            MC.player
+                    ));
+
+                    MC.options.rightKey.setPressed(yawOffset > 0.0 || hitRight.getType() == HitResult.Type.BLOCK);
+                    MC.options.leftKey.setPressed(yawOffset < 0.0 || hitLeft.getType() == HitResult.Type.BLOCK);
+
+                    if (MC.player.isOnGround() && (hit.getType() == HitResult.Type.BLOCK || dist > 5.0)) {
+                        MC.player.jump();
+                    }
+                }
+            } else if (!hasEscaped) {
+                Vec3d dir = playerPosition.subtract(center).normalize();
+                double dTheta = Math.acos(
+                    player.getRotationVector().dotProduct(dir)
+                );
+
+                if (dTheta > Math.PI * 0.125) {
+                    MovementUtil.lookAtCoordinate(playerPosition.add(dir.multiply(3.0)), 0.1);
+                    MovementUtil.updateCamera(
+                        -90.0,
+                        90.0, 0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        120.0
+                    );
+                } else {
+                    if (System.currentTimeMillis() - lastActionTime > spellClickDelayMS) {
+                        switch (actionIndex) {
+                            case 0, 1, 2 -> player.swingHand(Hand.MAIN_HAND);
+                            case 3 -> {
+                                hasEscaped = true;
+                                actionIndex = 0;
+                            }
+                        }
+                        actionIndex++;
+                        lastActionTime = System.currentTimeMillis();
+                    }
+                }
+            } else {
+                Vec3d target = center.add(new Vec3d(0.0, 0.0, 0.0));
+                Vec3d delta = target.subtract(playerPosition);
+                double dist = delta.length();
+
+                MovementUtil.lookAtCoordinate(
+                        target,
+                        0.1
+                );
+                MovementUtil.updateCamera(
+                        -90.0,
+                        90.0, 0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        90.0
+                );
+
+                double stopThreshold = 2.5;
+                if (dist < stopThreshold) {
+                    Vec3d dir = target.subtract(playerPosition).normalize();
+                    double dTheta = Math.acos(
+                            player.getRotationVector().dotProduct(dir)
+                    );
+
+                    if (dTheta < Math.PI / 8.0 && System.currentTimeMillis() - lastActionTime > spellClickDelayMS) {
+                        switch (actionIndex) {
+                            case 0 -> InventoryUtil.switchToSlot(InventoryUtil.getSlotOfItemWithString("Avia Feather"));
+//                            case 2 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                            case 20 -> MC.inGameHud.getChatHud().addMessage(Text.literal("right click"));
+                            case 36 -> InventoryUtil.switchToSlot(InventoryUtil.getSlotOfItemWithString("Ignis"));
+                            case 37 -> feature.setState(new IdleState());
+                        }
+                        actionIndex++;
+                        lastActionTime = System.currentTimeMillis();
+                    }
+                    return;
+                }
+
+                Vec3d dir = player.getRotationVector().getHorizontal().normalize();
+                BlockHitResult hit = world.raycast(new RaycastContext(
+                        footPos,
+                        footPos.add(dir.multiply(2.0)),
+                        RaycastContext.ShapeType.COLLIDER,
+                        RaycastContext.FluidHandling.NONE,
+                        player
+                ));
+
+                MC.options.forwardKey.setPressed(dist > stopThreshold);
+
+                if (MC.player.isOnGround() && (hit.getType() == HitResult.Type.BLOCK || dist > 5.0)) {
+                    MC.player.jump();
+                }
+            }
+        }
+
+        private Vec3d closestPointOnBorder(Vec3d p) {
+            double XM = center.x + squareRadius;
+            double Xm = center.x - squareRadius;
+            double ZM = center.z + squareRadius;
+            double Zm = center.z - squareRadius;
+
+            double dx = Math.min(p.x - Xm, XM - p.x);
+            double dz = Math.min(p.z - Zm, ZM - p.z);
+
+            double safeHalfWidth = 5.0;
+
+            if (dx < dz) {
+                double xEdge = (p.x - Xm < XM - p.x) ? Xm : XM;
+
+                double lowerSafe = center.z - safeHalfWidth;
+                double upperSafe = center.z + safeHalfWidth;
+
+                double z = p.z;
+
+                if (z > lowerSafe && z < upperSafe) {
+                    z = (z < center.z) ? lowerSafe : upperSafe;
+                }
+
+                return new Vec3d(xEdge, p.y, z);
+            } else {
+                double zEdge = (p.z - Zm < ZM - p.z) ? Zm : ZM;
+
+                double lowerSafe = center.x - safeHalfWidth;
+                double upperSafe = center.x + safeHalfWidth;
+
+                double x = p.x;
+
+                if (x > lowerSafe && x < upperSafe) {
+                    x = (x < center.x) ? lowerSafe : upperSafe;
+                }
+
+                return new Vec3d(x, p.y, zEdge);
+            }
+        }
     }
 
     /// Do nothing, unless there's an uth mob, in which case switch state to attack,
@@ -74,7 +297,7 @@ public class UthMacro extends Feature {
             World world = MC.world;
             if (player == null || world == null) return;
             Vec3d center = player.getEyePos();
-            double radius = 30.0;
+            double radius = 50.0;
             Box box = new Box(
                 center.getX() - radius, center.getY() - radius, center.getZ() - radius,
                 center.getX() + radius, center.getY() + radius, center.getZ() + radius
@@ -88,6 +311,8 @@ public class UthMacro extends Feature {
             if (!uthMobs.isEmpty()) {
                 MC.inGameHud.getChatHud().addMessage(Text.literal("Uth mob detected, switching to attack state"));
                 feature.setState(new AttackState(uthMobs.getFirst()));
+            } else if (role == 0) {
+                // do things
             }
         }
     }
@@ -116,8 +341,8 @@ public class UthMacro extends Feature {
                 Vec3d center = player.getEyePos();
                 double radius = 30.0;
                 Box box = new Box(
-                        center.getX() - radius, center.getY() - radius, center.getZ() - radius,
-                        center.getX() + radius, center.getY() + radius, center.getZ() + radius
+                    center.getX() - radius, center.getY() - radius, center.getZ() - radius,
+                    center.getX() + radius, center.getY() + radius, center.getZ() + radius
                 );
 
                 List<DisplayEntity.TextDisplayEntity> uthMobs = world.getEntitiesByClass(
@@ -143,19 +368,38 @@ public class UthMacro extends Feature {
 
             double dt = System.currentTimeMillis() - lastActionTime;
             if (dt > spellClickDelayMS) {
-                switch (actionIndex) {
-                    // bash (rlr)
-                    case 0 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
-                    case 1 -> player.swingHand(Hand.MAIN_HAND);
-                    case 2 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
-                    // scream (rrl)
-                    case 3 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
-                    case 4 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
-                    case 5 -> player.swingHand(Hand.MAIN_HAND);
-                    // next state
-                    case 6 -> {
-                        feature.setState(new CollectState());
-                        MC.inGameHud.getChatHud().addMessage(Text.literal("Switching to collect state"));
+                if (role == 0) {
+                    // main kill logic
+                    switch (actionIndex) {
+                        // angels (llr)
+                        case 0 -> player.swingHand(Hand.MAIN_HAND);
+                        case 1 -> player.swingHand(Hand.MAIN_HAND);
+                        case 2 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                        // bomb (lrr)
+                        case 3 -> player.swingHand(Hand.MAIN_HAND);
+                        case 4 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                        case 5 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                        // next state
+                        case 6 -> {
+                            feature.setState(new CollectState());
+                            MC.inGameHud.getChatHud().addMessage(Text.literal("Switching to collect state"));
+                        }
+                    }
+                } else {
+                    switch (actionIndex) {
+                        // bash (rlr)
+                        case 0 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                        case 1 -> player.swingHand(Hand.MAIN_HAND);
+                        case 2 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                        // scream (rrl)
+                        case 3 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                        case 4 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                        case 5 -> player.swingHand(Hand.MAIN_HAND);
+                        // next state
+                        case 6 -> {
+                            feature.setState(new CollectState());
+                            MC.inGameHud.getChatHud().addMessage(Text.literal("Switching to collect state"));
+                        }
                     }
                 }
                 lastActionTime = System.currentTimeMillis();
@@ -198,28 +442,17 @@ public class UthMacro extends Feature {
 
                     Text name = stack.get(DataComponentTypes.CUSTOM_NAME);
                     return (name != null && name.getString().contains("Uth Rune"));
-//                    return stack.isOf(Items.EMERALD);
                 }
             );
 
             if (!uthRunes.isEmpty()) hasSeenRune = true;
 
             if (hasSeenRune) {
-                Vec3d targetPosition = switch (role) {
-                    case Role.ALT1 -> new Vec3d(-216.5, 137.5, -4459.5);
-                    case Role.ALT2 -> new Vec3d(-214.5, 137.5, -4459.5);
-                    case Role.ALT3 -> new Vec3d(-215.5, 137.5, -4458.5);
-                    case Role.ALT4 -> new Vec3d(-215.5, 137.5, -4460.5);
-                    case Role.ALT5 -> new Vec3d(-218.5, 137.5, -4459.5);
-                    case Role.ALT6 -> new Vec3d(-212.5, 137.5, -4459.5);
-                    case Role.ALT7 -> new Vec3d(-219.5, 137.5, -4459.5);
-                    case Role.ALT8 -> new Vec3d(-211.5, 137.5, -4459.5);
-                    case Role.ALT9 -> new Vec3d(-220.5, 137.5, -4459.5);
-                    case Role.ALT10 -> new Vec3d(-210.5, 137.5, -4459.5);
-                    case Role.MAIN -> playerPosition;
-                };
+                Vec3d targetPosition = role > 0 ? altPositions[role - 1] : playerPosition;
                 boolean targetIsItem = false;
                 double goThreshold = 3.0;
+
+                // Check if collection is complete
                 if (returnToOrigin && playerPosition.distanceTo(targetPosition) < goThreshold && atTarget && uthRunes.isEmpty()) {
                     IpcManager.signalCollectComplete();
                 }
@@ -259,22 +492,21 @@ public class UthMacro extends Feature {
                 double stopThreshold = 0.5;
                 if (currentDist < stopThreshold) atTarget = true;
 
-                System.out.println("dist: " + currentDist);
-
                 MC.options.forwardKey.setPressed(false);
                 MC.options.rightKey.setPressed(false);
                 MC.options.leftKey.setPressed(false);
-                if (!atTarget) {
-                    MovementUtil.lookAtCoordinate(targetPosition, Math.min(0.1 * currentDist, 0.2));
-                    double yawOffset = MovementUtil.updateCamera(
-                            -10.0,
-                            42.8, 10.0,
-                            10.0 * (1.0 + (1.0 / (-currentDist - 2))),
-                            15.0,
-                            5.0,
-                            90.0
-                    );
 
+                MovementUtil.lookAtCoordinate(targetPosition, Math.min(0.1 * currentDist, 0.2));
+                double yawOffset = MovementUtil.updateCamera(
+                        -10.0,
+                        42.8, 10.0,
+                        10.0 * (1.0 + (1.0 / (-currentDist - 2))),
+                        15.0,
+                        5.0,
+                        90.0
+                );
+
+                if (!atTarget) {
                     MC.options.forwardKey.setPressed(coastDist > stopThreshold);
                     MC.options.rightKey.setPressed(yawOffset > 0.0);
                     MC.options.leftKey.setPressed(yawOffset < 0.0);
@@ -303,11 +535,12 @@ public class UthMacro extends Feature {
     }
 
     /// Run /class, wait 3 seconds, then left click to re-enter and switch state to idle.
-    private class ReloadState extends State {
+    private class ClassState extends State {
         private final long startTime = System.currentTimeMillis();
+        private final double randomDelay = Math.random() * 200.0;
         private boolean hasClassed = false;
 
-        public ReloadState() { super(UthMacro.INSTANCE); }
+        public ClassState() { super(UthMacro.INSTANCE); }
 
         @Override
         public void onTick() {
@@ -319,12 +552,12 @@ public class UthMacro extends Feature {
             if (!hasClassed) {
                 networkHandler.sendChatCommand("class");
                 hasClassed = true;
-            } else if (System.currentTimeMillis() - startTime > 8000) {
+            } else if (System.currentTimeMillis() - startTime > 1600.0 + randomDelay + 150.0 * role) {
                 if (MC.crosshairTarget instanceof EntityHitResult hit) {
                     interactionManager.attackEntity(player, hit.getEntity());
                     player.swingHand(Hand.MAIN_HAND);
                 }
-                feature.setState(new IdleState());
+                feature.setState(role == 0 ? new StartState() : new IdleState());
             }
         }
     }
@@ -379,11 +612,10 @@ public class UthMacro extends Feature {
                             center.getX() + radius, center.getY() + radius, center.getZ() + radius
                         );
 
-                        List<Entity> entities = MC.world.getEntitiesByClass(
-                            Entity.class,
+                        List<ArmorStandEntity> entities = MC.world.getEntitiesByClass(
+                            ArmorStandEntity.class,
                             box,
                             entity -> true
-//                            entity -> entity instanceof PlayerEntity || entity instanceof ZombieEntity || entity instanceof ArmorStandEntity
                         );
 
                         if (MC.crosshairTarget instanceof EntityHitResult hit) {
@@ -391,29 +623,16 @@ public class UthMacro extends Feature {
                             MC.player.swingHand(Hand.MAIN_HAND);
                         }
 
-                        for (Entity entity : entities) {
-                            if (entity instanceof DisplayEntity.TextDisplayEntity textDisplay) {
-                                String name = getMobName(textDisplay);
-                                System.out.println("found mob named: " + name + " --- at: " + entity.getEyePos() + "\n\n");
-                                ctx.getSource().sendFeedback(
-                                    Text.literal("found: " + name)
-                                );
-                            }
-                        }
-
-                        List<ItemEntity> uthRunes = MC.world.getEntitiesByClass(
-                                ItemEntity.class,
-                                box,
-                                entity -> true
-                        );
-                        for (ItemEntity itemEntity : uthRunes) {
-                            ItemStack stack = itemEntity.getStack();
-
-                            Text name = stack.get(DataComponentTypes.CUSTOM_NAME);
-                            ctx.getSource().sendFeedback(Text.literal("ITEM: " + name + ",\n "
-                                    + stack.get(DataComponentTypes.LORE) + ", \n"
-                                    + stack.get(DataComponentTypes.ITEM_MODEL) + ", \n"
-                            ));
+                        for (ArmorStandEntity entity : entities) {
+                            System.out.println("!!!!!");
+                            System.out.println("!!!!!");
+                            System.out.println("!!!!!");
+                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getName());
+                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_MODEL_DATA));
+                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.ITEM_MODEL));
+                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_NAME));
+                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.LORE));
+                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_DATA));
                         }
 
                         return 1;
@@ -427,28 +646,14 @@ public class UthMacro extends Feature {
                 })
             )
             .then(literal("role")
-                .then(argument("role", StringArgumentType.word())
-                    .suggests((context, builder) ->
-                        CommandSource.suggestMatching(
-                            new String[]{
-                                "main", "alt1", "alt2"
-                            },
-                            builder
-                        )
-                    )
+                .then(argument("role", IntegerArgumentType.integer(0))
                     .executes(ctx -> {
-                        String roleInput = StringArgumentType.getString(ctx, "role").toUpperCase();
+                        int roleInput = IntegerArgumentType.getInteger(ctx, "role");
 
-                        try {
-                            role = Role.valueOf(roleInput);
-                            ctx.getSource().sendFeedback(
-                                Text.literal("Uth role set to: " + roleInput)
-                            );
-                        } catch (IllegalArgumentException e) {
-                            ctx.getSource().sendError(
-                                Text.literal("Invalid role.")
-                            );
-                        }
+                        role = roleInput;
+                        ctx.getSource().sendFeedback(
+                            Text.literal(role == 0 ? "Uth role set to MAIN" : "Uth role set to ALT" + roleInput
+                        ));
                         return 1;
                     })
                 )
@@ -466,7 +671,7 @@ public class UthMacro extends Feature {
                     .suggests((context, builder) ->
                         CommandSource.suggestMatching(
                             new String[]{
-                                    "idle", "attack", "collect", "reload"
+                                    "idle", "attack", "collect", "reload", "start"
                             },
                             builder
                         )
@@ -479,7 +684,17 @@ public class UthMacro extends Feature {
                                 case "IDLE" -> state = new IdleState();
                                 case "ATTACK" -> state = new AttackState(null);
                                 case "COLLECT" -> state = new CollectState();
-                                case "RELOAD" -> state = new ReloadState();
+                                case "RELOAD" -> state = new ClassState();
+                                case "START" -> {
+                                    if (role == 0) {
+                                        state = new StartState();
+                                    } else {
+                                        ctx.getSource().sendError(
+                                                Text.literal("State attempted to switch to START, but this instance is an alt!")
+                                        );
+                                        return 1;
+                                    }
+                                }
                             }
                             ctx.getSource().sendFeedback(
                                 Text.literal("State set to: " + stateInput)

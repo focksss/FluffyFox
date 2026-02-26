@@ -65,7 +65,7 @@ public class InventoryUtil {
     }
 
     public static void switchToSlot(int slotIndex) {
-        if (MC.player != null && (MC.currentScreen == null || MC.currentScreen instanceof ChatScreen)) {
+        if (slotIndex > -1 && MC.player != null && (MC.currentScreen == null || MC.currentScreen instanceof ChatScreen)) {
             MC.player.getInventory().setSelectedSlot(slotIndex);
         }
     }
