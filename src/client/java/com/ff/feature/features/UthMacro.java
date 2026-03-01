@@ -217,12 +217,13 @@ public class UthMacro extends Feature {
 
                     if (dTheta < Math.PI / 8.0 && System.currentTimeMillis() - lastActionTime > spellClickDelayMS) {
                         switch (actionIndex) {
-                            case 0 -> InventoryUtil.switchToSlot(InventoryUtil.getSlotOfItemWithString("Avia Feather"));
+                            case 8 -> InventoryUtil.switchToSlot(InventoryUtil.getSlotOfItemWithString("Avia Feather"));
 //                            case 2 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
-                            case 20 -> MC.inGameHud.getChatHud().addMessage(Text.literal("right click"));
-                            case 36 -> InventoryUtil.switchToSlot(InventoryUtil.getSlotOfItemWithString("Ignis"));
-                            case 37 -> feature.setState(new IdleState());
+                            case 12 -> interactionManager.interactItem(player, Hand.MAIN_HAND);
+                            case 14 -> InventoryUtil.switchToSlot(InventoryUtil.getSlotOfItemWithString("Ignis"));
+                            case 16 -> feature.setState(new IdleState());
                         }
+                        MC.inGameHud.getChatHud().addMessage(Text.literal("tick " + actionIndex));
                         actionIndex++;
                         lastActionTime = System.currentTimeMillis();
                     }
@@ -606,34 +607,7 @@ public class UthMacro extends Feature {
 
                         IpcManager.signalCollectComplete();
 
-                        double radius = 5.0;
-                        Box box = new Box(
-                            center.getX() - radius, center.getY() - radius, center.getZ() - radius,
-                            center.getX() + radius, center.getY() + radius, center.getZ() + radius
-                        );
-
-                        List<ArmorStandEntity> entities = MC.world.getEntitiesByClass(
-                            ArmorStandEntity.class,
-                            box,
-                            entity -> true
-                        );
-
-                        if (MC.crosshairTarget instanceof EntityHitResult hit) {
-                            MC.interactionManager.attackEntity(MC.player, hit.getEntity());
-                            MC.player.swingHand(Hand.MAIN_HAND);
-                        }
-
-                        for (ArmorStandEntity entity : entities) {
-                            System.out.println("!!!!!");
-                            System.out.println("!!!!!");
-                            System.out.println("!!!!!");
-                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getName());
-                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_MODEL_DATA));
-                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.ITEM_MODEL));
-                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_NAME));
-                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.LORE));
-                            System.out.println(entity.getEquippedStack(EquipmentSlot.HEAD).getComponents().get(DataComponentTypes.CUSTOM_DATA));
-                        }
+                        InventoryUtil.switchToSlot(InventoryUtil.getSlotOfItemWithString("Avia Feather"));
 
                         return 1;
                     })
