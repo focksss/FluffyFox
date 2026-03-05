@@ -21,6 +21,14 @@ public class DiscoSwap extends Feature {
 
     public DiscoSwap() { super("discoswap", "ds"); }
 
+
+    /**
+     * - Find disco in inventory, if any. If none is present, return and print message.
+     * - If disco is equipped, then check if there is a previously equipped slot.
+     * - - If there is no previously equipped slot, return and print message.
+     * - - If there is a previously equipped slot, swap
+     * - If disco not equipped, find it and switch, set previously equipped slot to the slot it was in.
+     */
     public void execute() {
         PlayerEntity player = MC.player;
         if (player == null) return;
