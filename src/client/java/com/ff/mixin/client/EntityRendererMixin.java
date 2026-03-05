@@ -28,7 +28,12 @@ public abstract class EntityRendererMixin {
         if (entity instanceof ArmorStandEntity) {
             ItemStack item = ((ArmorStandEntity) entity).getEquippedStack(EquipmentSlot.HEAD);
             Vec3d vel = entity.getVelocity();
-            if (item.getItem() == Items.DIAMOND_SWORD && vel.getHorizontal().length() == 0.0 && !entity.hasNoGravity() && item.getDamage() == 4) cir.setReturnValue(false);
+            if (
+                item.getItem() == Items.DIAMOND_SWORD &&
+                vel.getHorizontal().length() == 0.0 &&
+                !entity.hasNoGravity() &&
+                (item.getDamage() == 4 || item.getDamage() == 3 || item.getDamage() == 2 || item.getDamage() == 1)
+            ) cir.setReturnValue(false);
         }
     }
 }

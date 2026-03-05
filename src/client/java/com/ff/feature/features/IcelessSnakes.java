@@ -25,6 +25,9 @@ import java.util.List;
 import static com.ff.FluffyFoxClient.MC;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
+/// Ice snake metadaa: [14:54:16] [Render thread/INFO]: [STDOUT]: {Damage:4s,HideFlags:6,Unbreakable:1b,"VV|Protocol1_20_3To1_20_5":1b}
+/// Beta ice snake metadata
+
 public class IcelessSnakes extends Feature {
     public static IcelessSnakes INSTANCE = new IcelessSnakes();
 

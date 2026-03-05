@@ -11,6 +11,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.ff.feature.Manager.FEATURES;
 
+
+//TODO
+// * Action queue
+// * Auto de-register instances that close
+// * For non-reset actions, allow instantly unless another action is actively in queue
+// * Host should send occasional lifetime pings to registered instances to check for life.
+// * State enum, host checks for status of each instance, sequentially calls the next to switch.
+
 public class IpcManager {
 
     private static final int PORT = 47329;
