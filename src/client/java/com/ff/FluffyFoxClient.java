@@ -19,6 +19,7 @@ public class FluffyFoxClient implements ClientModInitializer {
 
 		Keybinds.register();
 
+		Manager.register(Test.INSTANCE);
 		Manager.register(AntiAfk.INSTANCE);
 		Manager.register(Freelook.INSTANCE);
 		Manager.register(AntiScroll.INSTANCE);
@@ -28,6 +29,7 @@ public class FluffyFoxClient implements ClientModInitializer {
 		Manager.register(IcelessSnakes.INSTANCE);
 		Manager.register(Antiblind.INSTANCE);
 		Manager.register(DiscoSwap.INSTANCE);
+		Manager.register(FixSkinRendering.INSTANCE);
 
 		Command.register();
 

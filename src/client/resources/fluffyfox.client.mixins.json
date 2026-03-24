@@ -1,15 +1,16 @@
 {
-	"required": true,
-	"package": "com.ff.mixin.client",
-	"compatibilityLevel": "JAVA_21",
-	"client": [
-		"ExampleClientMixin",
-		"CameraMixin",
-		"MouseMixin",
-		"EntityRendererMixin",
-		"BlindnessEffectFogModifierMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
+  "required": true,
+  "package": "com.ff.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "BlindnessEffectFogModifierMixin",
+    "CameraMixin",
+    "EntityRendererMixin",
+    "ExampleClientMixin",
+    "MouseMixin",
+    "PlayerEntityRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
 	}
 }
