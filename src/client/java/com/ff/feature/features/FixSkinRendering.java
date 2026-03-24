@@ -1,5 +1,6 @@
 package com.ff.feature.features;
 
+import com.ff.config.ConfigManager;
 import com.ff.feature.Feature;
 import com.ff.feature.State;
 import com.ff.ipc.IpcManager;
@@ -51,6 +52,8 @@ public class FixSkinRendering extends Feature {
                     .executes(ctx -> {
                         toggle();
                         ctx.getSource().sendFeedback(Text.literal((enabled ? "All skin layers will be force loaded." : "Skin layers will no longer be force loaded")));
+                        ConfigManager.get().fixSkinRenderingEnabled = enabled;
+                        ConfigManager.save();
                         return 1;
                     })
             )

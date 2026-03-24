@@ -1,5 +1,6 @@
 package com.ff.feature.features;
 
+import com.ff.config.ConfigManager;
 import com.ff.feature.Feature;
 import com.ff.ipc.IpcManager;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -40,6 +41,8 @@ public class IcelessSnakes extends Feature {
                 .executes(ctx -> {
                     toggle();
                     ctx.getSource().sendFeedback(Text.literal("IcelessSnakes: " + (enabled ? "ON" : "OFF")));
+                    ConfigManager.get().icelessSnakesEnabled = enabled;
+                    ConfigManager.save();
                     return 1;
                 })
             );

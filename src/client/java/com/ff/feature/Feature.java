@@ -25,6 +25,17 @@ public abstract class Feature {
         else onDisable();
     }
 
+    public void setEnabled(boolean enabled) {
+        boolean wasEnabled = this.enabled;
+        this.enabled = enabled;
+        if (wasEnabled == enabled) return;
+        if (enabled) {
+            onEnable();
+        } else {
+            onDisable();
+        }
+    }
+
     protected void onEnable() {}
     protected void onDisable() {}
 

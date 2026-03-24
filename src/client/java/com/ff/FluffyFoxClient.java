@@ -1,5 +1,6 @@
 package com.ff;
 
+import com.ff.config.ConfigManager;
 import com.ff.feature.*;
 import com.ff.feature.features.*;
 import com.ff.ipc.IpcManager;
@@ -32,6 +33,9 @@ public class FluffyFoxClient implements ClientModInitializer {
 		Manager.register(FixSkinRendering.INSTANCE);
 
 		Command.register();
+
+		ConfigManager.load();
+		ConfigManager.get().updateInternal();
 
 		ClientTickEvents.END_CLIENT_TICK.register(client ->
 			Manager.tick()
