@@ -31,6 +31,7 @@ public class FluffyFoxClient implements ClientModInitializer {
 		Manager.register(Antiblind.INSTANCE);
 		Manager.register(DiscoSwap.INSTANCE);
 		Manager.register(FixSkinRendering.INSTANCE);
+		Manager.register(WatchedTitles.INSTANCE);
 
 		Command.register();
 

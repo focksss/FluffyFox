@@ -7,9 +7,10 @@
     "CameraMixin",
     "EntityRendererMixin",
     "ExampleClientMixin",
-    "PlayerLikeEntityMixin",
     "MouseMixin",
-    "PlayerEntityRendererMixin"
+    "PlayerEntityRendererMixin",
+    "PlayerLikeEntityMixin",
+    "SoundSystemMixin"
   ],
   "injectors": {
     "defaultRequire": 1
