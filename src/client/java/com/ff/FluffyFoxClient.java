@@ -6,6 +6,7 @@ import com.ff.feature.features.*;
 import com.ff.ipc.IpcManager;
 import net.fabricmc.api.ClientModInitializer;
 import com.ff.command.Command;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -33,11 +34,14 @@ public class FluffyFoxClient implements ClientModInitializer {
 		Manager.register(FixSkinRendering.INSTANCE);
 		Manager.register(WatchedTitles.INSTANCE);
 		Manager.register(GlowingShadowlings.INSTANCE);
+		Manager.register(BulbHolderWaypoints.INSTANCE);
 
 		Command.register();
 
 		ConfigManager.load();
 		ConfigManager.get().updateInternal();
+
+		WorldRenderEvents.END_MAIN.register(BulbHolderWaypoints::onRender);
 
 		ClientTickEvents.END_CLIENT_TICK.register(client ->
 			Manager.tick()

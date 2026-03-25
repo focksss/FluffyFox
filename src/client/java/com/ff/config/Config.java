@@ -9,6 +9,7 @@ public class Config {
     public boolean icelessSnakesEnabled = true;
     public boolean watchedTitlesEnabled = true;
     public boolean glowingShadowlingsEnabled = true;
+    public boolean bulbHolderWaypointsEnabled = true;
 
     public void updateInternal() {
         Antiblind.INSTANCE.setEnabled(antiBlindEnabled);
@@ -17,5 +18,6 @@ public class Config {
         IcelessSnakes.INSTANCE.setEnabled(icelessSnakesEnabled);
         WatchedTitles.INSTANCE.setEnabled(watchedTitlesEnabled);
         GlowingShadowlings.INSTANCE.setEnabled(glowingShadowlingsEnabled);
+        BulbHolderWaypoints.INSTANCE.setEnabled(bulbHolderWaypointsEnabled);
     }
 }
