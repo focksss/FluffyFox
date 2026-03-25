@@ -5,7 +5,9 @@ import com.ff.feature.Feature;
 import com.ff.feature.State;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.Vec3d;
 
 import static com.ff.FluffyFoxClient.MC;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
@@ -23,7 +25,9 @@ public class WatchedTitles extends Feature {
 
     public static void onTelegraphSound(int step) {
         if (!INSTANCE.isEnabled()) return;
-        if (MC.player == null) return;
+        PlayerEntity player = MC.player;
+        if (player == null) return;
+        if (player.getEyePos().getHorizontal().distanceTo(new Vec3d(26625, 0, -22140)) > 200.0) return;
 
         String label = switch (step) {
             case 0 -> "2";
