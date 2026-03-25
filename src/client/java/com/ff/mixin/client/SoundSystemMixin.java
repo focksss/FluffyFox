@@ -31,7 +31,7 @@ public abstract class SoundSystemMixin {
         Identifier evokerPrepare = SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON.id();
         Identifier tridentThunder = SoundEvents.ITEM_TRIDENT_THUNDER.value().id();
 
-        if (id.equals(tridentThunder)) {
+        if (id.equals(evokerPrepare)) {
             if (WatchedTitles.telegraphStep == 0) {
                 WatchedTitles.onTelegraphSound(0); // "2"
                 WatchedTitles.telegraphStep = 1;
@@ -41,7 +41,7 @@ public abstract class SoundSystemMixin {
                 WatchedTitles.telegraphStep = 2;
                 WatchedTitles.lastSoundTick = now;
             }
-        } else if (id.equals(evokerPrepare)) {
+        } else if (id.equals(tridentThunder)) {
             if (WatchedTitles.telegraphStep == 2) {
                 WatchedTitles.onTelegraphSound(2); // "0"
                 WatchedTitles.telegraphStep = 0;

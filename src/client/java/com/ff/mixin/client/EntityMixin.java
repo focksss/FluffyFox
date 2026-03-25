@@ -1,5 +1,6 @@
 package com.ff.mixin.client;
 
+import com.ff.feature.features.GlowingShadowlings;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.DisplayEntity;
@@ -15,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class EntityMixin {
     @Inject(method = "isGlowing", at = @At("HEAD"), cancellable = true)
     private void onIsGlowing(CallbackInfoReturnable<Boolean> cir) {
+        if (!GlowingShadowlings.INSTANCE.isEnabled()) return;
         Entity entity = (Entity) (Object) this;
 
         if (!(entity instanceof DisplayEntity.ItemDisplayEntity itemDisplay)) return;
