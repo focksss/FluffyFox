@@ -43,6 +43,10 @@ public class BulbHolderWaypoints extends Feature {
 
     public void onGoatHorn(Vec3d pos, long tick) {
         if (!isEnabled()) return;
+
+        MC.inGameHud.setTitle(Text.literal("BULB").styled(s -> s.withColor(0xFF2200)));
+        MC.inGameHud.setTitleTicks(2, 6, 3);
+
         waypoints.add(new Waypoint(pos, tick));
     }
 
