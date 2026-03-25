@@ -8,6 +8,7 @@ public class Config {
     public boolean fixSkinRenderingEnabled = true;
     public boolean icelessSnakesEnabled = true;
     public boolean watchedTitlesEnabled = true;
+    public boolean glowingShadowlingsEnabled = true;
 
     public void updateInternal() {
         Antiblind.INSTANCE.setEnabled(antiBlindEnabled);
@@ -15,5 +16,6 @@ public class Config {
         FixSkinRendering.INSTANCE.setEnabled(fixSkinRenderingEnabled);
         IcelessSnakes.INSTANCE.setEnabled(icelessSnakesEnabled);
         WatchedTitles.INSTANCE.setEnabled(watchedTitlesEnabled);
+        GlowingShadowlings.INSTANCE.setEnabled(glowingShadowlingsEnabled);
     }
 }
