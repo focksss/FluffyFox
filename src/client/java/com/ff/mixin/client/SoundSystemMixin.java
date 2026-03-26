@@ -55,7 +55,8 @@ public abstract class SoundSystemMixin {
             Identifier id  = sound.getId();
             if (MC.player == null) return;
             long now = System.currentTimeMillis();
-            if (id.getPath().contains("goat_horn")) {
+            String soundPath = id.getPath();
+            if (soundPath.contains("goat_horn") && !soundPath.contains("0") && !soundPath.contains("1")) {
                 Vec3d pos = new Vec3d(sound.getX(), sound.getY(), sound.getZ());
                 System.out.println(pos.x + ", " + pos.y + ", " + pos.z);
                 BulbHolderWaypoints.INSTANCE.onGoatHorn(pos, now);
