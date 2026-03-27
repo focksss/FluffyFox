@@ -112,9 +112,9 @@ public class FlyingAxonWarning extends Feature {
                 .executes(ctx -> {
                     toggle();
                     ctx.getSource().sendFeedback(Text.literal(
-                            enabled ? "WatchedTitles enabled." : "WatchedTitles disabled."
+                            enabled ? "FlyingAxonWarning enabled." : "FlyingAxonWarning disabled."
                     ));
-                    ConfigManager.get().watchedTitlesEnabled = enabled;
+                    ConfigManager.get().flyingAxonWarningEnabled = enabled;
                     ConfigManager.save();
                     return 1;
                 })
