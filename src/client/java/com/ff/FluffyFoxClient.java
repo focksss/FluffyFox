@@ -35,13 +35,14 @@ public class FluffyFoxClient implements ClientModInitializer {
 		Manager.register(WatchedTitles.INSTANCE);
 		Manager.register(GlowingShadowlings.INSTANCE);
 		Manager.register(BulbHolderWaypoints.INSTANCE);
+		Manager.register(FlyingAxonWarning.INSTANCE);
 
 		Command.register();
 
 		ConfigManager.load();
 		ConfigManager.get().updateInternal();
 
-		WorldRenderEvents.END_MAIN.register(BulbHolderWaypoints::onRender);
+		WorldRenderEvents.END_MAIN.register(Manager::onRender);
 
 		ClientTickEvents.END_CLIENT_TICK.register(client ->
 			Manager.tick()

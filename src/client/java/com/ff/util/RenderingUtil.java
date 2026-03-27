@@ -1,17 +1,16 @@
-package com.ff.Rendering;
+package com.ff.util;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 import static com.ff.FluffyFoxClient.MC;
 
-public final class RenderingHelper {
+public final class RenderingUtil {
 
-    private RenderingHelper() {}
+    private RenderingUtil() {}
 
     public static void drawTracer(
         MatrixStack ms,

@@ -39,6 +39,7 @@ import net.minecraft.world.World;
 import java.util.List;
 
 import static com.ff.FluffyFoxClient.MC;
+import static com.ff.util.WynnMobUtil.getMobName;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 
@@ -569,34 +570,6 @@ public class UthMacro extends Feature {
 
     @Override
     public void onEnable() { state = new IdleState(); }
-
-    private static String getMobName(DisplayEntity.TextDisplayEntity textDisplay) {
-        Text text = textDisplay.getText();
-
-        for (Text sibling : text.getSiblings()) {
-            String s = sibling.getString();
-            if (s != null && !s.isBlank()) {
-                int cutoff = s.length();
-                for (int i = 0; i < s.length(); i++) {
-                    char c = s.charAt(i);
-                    if (c >= 0xE000 || c == '\n') {
-                        cutoff = i;
-                        break;
-                    }
-                }
-                String name = s.substring(0, cutoff).trim();
-                if (!name.isEmpty()) return name;
-            }
-        }
-
-        String plain = text.getString();
-        StringBuilder name = new StringBuilder();
-        for (char c : plain.toCharArray()) {
-            if (c >= 0xE000 || c == '\n') break;
-            name.append(c);
-        }
-        return name.toString().trim();
-    }
 
     @Override
     public LiteralArgumentBuilder<FabricClientCommandSource> buildCommand(String commandRoot) {

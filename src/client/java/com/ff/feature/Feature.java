@@ -2,6 +2,7 @@ package com.ff.feature;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 
 public abstract class Feature {
     protected final String name;
@@ -44,6 +45,8 @@ public abstract class Feature {
     public void onTick() {
         state.onTick();
     }
+
+    public void onRender(WorldRenderContext ctx) {}
 
     public void setState(State newState) {
         if (state != null) {

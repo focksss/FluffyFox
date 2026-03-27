@@ -1,5 +1,5 @@
 package com.ff.feature.features;
-import com.ff.Rendering.RenderingHelper;
+import com.ff.util.RenderingUtil;
 import com.ff.config.ConfigManager;
 import com.ff.feature.Feature;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -15,13 +15,6 @@ import java.util.List;
 import static com.ff.FluffyFoxClient.MC;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
-/**
- * GoatHornWaypoints — shows a beacon beam + tracer for 5 seconds
- * at the world position of every goat horn sound that plays.
- *
- * Register in your ClientModInitializer:
- *   WorldRenderEvents.LAST.register(GoatHornWaypoints.INSTANCE::onRender);
- */
 public class BulbHolderWaypoints extends Feature {
 
     public static final BulbHolderWaypoints INSTANCE = new BulbHolderWaypoints();
@@ -50,8 +43,9 @@ public class BulbHolderWaypoints extends Feature {
         waypoints.add(new Waypoint(pos, tick));
     }
 
-    public static void onRender(WorldRenderContext ctx) {
-        if (!BulbHolderWaypoints.INSTANCE.isEnabled()) return;
+    @Override
+    public void onRender(WorldRenderContext ctx) {
+        if (!enabled) return;
 
         if (MC.player == null) return;
 
@@ -59,10 +53,10 @@ public class BulbHolderWaypoints extends Feature {
 
         long now = System.currentTimeMillis();
 
-        BulbHolderWaypoints.INSTANCE.waypoints.removeIf(waypoint -> waypoint.isExpired(now));
+        waypoints.removeIf(waypoint -> waypoint.isExpired(now));
 
 
-        if (BulbHolderWaypoints.INSTANCE.waypoints.isEmpty()) return;
+        if (waypoints.isEmpty()) return;
 
 
         Vec3d cam = MC.gameRenderer.getCamera().getCameraPos();
@@ -73,18 +67,17 @@ public class BulbHolderWaypoints extends Feature {
 //        ctx.matrices().translate(-cam.x, -cam.y, -cam.z);
 
 
-        for (Waypoint wp : BulbHolderWaypoints.INSTANCE.waypoints) {
+        for (Waypoint wp : waypoints) {
             float alpha = wp.alpha(now);
             if (alpha <= 0f) continue;
-            System.out.println("waypoint should be drawn");
 
-            RenderingHelper.drawBeam(
+            RenderingUtil.drawBeam(
                 ctx.matrices(), vcp, cam, wp.pos,
                 BEAM_HEIGHT, BEAM_HALF_WIDTH,
                 R, G, B, alpha * 0.55f
             );
 
-            RenderingHelper.drawTracer(
+            RenderingUtil.drawTracer(
                 ctx.matrices(), vcp, cam, wp.pos,
                 R, G, B, alpha
             );
